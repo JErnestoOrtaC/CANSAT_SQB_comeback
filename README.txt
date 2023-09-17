@@ -1,4 +1,6 @@
 
+ejemplo de git
+
 Este es el proyecto SQB del equipo delfinus para competir en los CNASAT.
 En este repositorio se tiene el programa de la compuatdora de vuelo para el proyecto "Telemetry" y "Comeback"
 
