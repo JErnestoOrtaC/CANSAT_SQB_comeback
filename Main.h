@@ -9,6 +9,7 @@
 bool nrpFlag=0;
 bool cmbkFlag =0;
 double Q = 1000000000;
+float alpha;
 
 
 void Begins(){
@@ -152,7 +153,7 @@ bool Arrived(){
   
 }
 
-void Aim(){
+float Aim(){
   double y = gps.distanceBetween(gps.location.lat(), home_long, home_lat, home_long);
   double x = gps.distanceBetween(home_lat, gps.location.lng(), home_lat, home_long);
 
@@ -176,11 +177,12 @@ void Aim(){
   }
   Serial.print("alpha: ");
   Serial.println(alpha);
+  return alpha;
 
 }
 
 void ComeBack1(){
-  Serial.print("Q: ");
+  Serial.print("Q: "); //empezando el programa vale un valor muy grande como 999999999
   Serial.println(Q);
   if( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) <= 5){
     Serial.println("Llegaste al destino");
@@ -191,7 +193,11 @@ void ComeBack1(){
   if( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) <= Q ){
     Serial.println("Apuntando");
     Motor_Stop();
-    Aim();
+    alpha = Aim();
+    while( fabs( Get_Heading() - alpha) > 10 ){
+      Turn_Right();
+      Serial.println("--> Girando a la derecha -->");
+    }
     if( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) > 1){
       Q = gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) / 3 ;
     }
