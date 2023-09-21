@@ -73,6 +73,13 @@ void Sensorcheck(){
     Serial.println("No se pudo encontrar el sensor MPU6050. Verifica las conexiones.");
     while (1);
   }
+
+  if(!mag.begin())
+  {
+    /* There was a problem detecting the HMC5883 ... check your connections */
+    Serial.println("Ooops, no HMC5883 detected ... Check your wiring!");
+    while(1);
+  }
 }
 
 void BMPSensor() {
