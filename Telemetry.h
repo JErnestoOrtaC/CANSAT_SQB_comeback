@@ -11,6 +11,12 @@
 #include <MPU6050.h>
 #include <TinyGPS++.h>
 #include <Adafruit_HMC5883_U.h>
+#include <math.h>
+
+const double home_lat =22.2558886;
+const double home_long = -97.8582055;
+const double tolerancia_latitud = 0.0002; // Rango de tolerancia de 1 metro en latitud
+#define EARTH_RADIUS 6371.0
 
 struct GPSData {
   double latitude;
@@ -116,7 +122,7 @@ float Get_heading(){
   // Find yours here: http://www.magnetic-declination.com/  
   // Mine is: -13* 2' W, which is ~13 Degrees, or (which we need) 0.22 radians
   // If you cannot find your Declination, comment out these two lines, your compass will be slightly off.
-  float declinationAngle = .05;
+  float declinationAngle = .20;
   _heading += declinationAngle;
 
   // Correct for when signs are reversed.
@@ -202,6 +208,7 @@ void PacageTelemetry(){
   mensaje += "Vz: " + String(datos.vz);
   mensaje += "Vt: " + String(datos.vt);
   mensaje += "Hdg:" + String(datos.heading);
+  mensaje += "Dist: " + String( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) );
 }
 
 

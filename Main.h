@@ -8,6 +8,8 @@
 
 bool nrpFlag=0;
 bool cmbkFlag =0;
+double Q = 1000000000;
+float alpha;
 
 
 void Begins(){
@@ -20,6 +22,8 @@ void Begins(){
   Serial.begin(9600);
   Serial1.begin(9600, SERIAL_8N1, 32, 4);
   Wire.begin();
+  Adafruit_HMC5883_Unified mag = Adafruit_HMC5883_Unified(12345);
+  sensor_t sensor;
   delay(150);
   LoraConfig();
 }
@@ -29,7 +33,7 @@ void EnviarInfo(){
   LoraSend(mensaje);
 }
 
-void ComeBack(){
+void ComeBackMc(){
  
   //Avanza al norte para igualar la latitud  
   if (fabs(home_lat - datos.gpsData.latitude) > tolerancia_latitud) { //CHECAMOS QUE NO ESTEMOS YA EN LA MISMA LATITUD DENTRO DEL MARGEN DE ERROR
@@ -131,6 +135,88 @@ void Landing(){
     nrpFlag =0; //Reseteamos la nrpflag para que no abre y corte el paracaidas cuado ya este en el suelo
     cmbkFlag =1; //Activamos el sistema de comeback
     //Separa el paracaidas
+  }
+}
+
+bool Arrived(){
+  if( fabs(home_lat - datos.gpsData.latitude) <= tolerancia_latitud ){
+    if( fabs(home_lat - datos.gpsData.latitude) <= tolerancia_latitud ){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+  else{
+    return false;
+  }
+  
+}
+
+float Aim(){
+  double y = gps.distanceBetween(gps.location.lat(), home_long, home_lat, home_long);
+  double x = gps.distanceBetween(home_lat, gps.location.lng(), home_lat, home_long);
+  
+  //El obj esta en el sur.
+  if( gps.location.lat() > home_lat ){
+    y *= -1;
+  }
+  //El obj esta al oeste
+  if( gps.location.lng() > home_long ){
+    x *= -1;
+  }
+
+  // Asegúrate de que x y y sean positivos
+  /*
+  if (x < 0) {
+    x = -x;
+  }
+  if (y < 0) {
+    y = -y;
+  }
+  */
+  // Calcular el ángulo de rumbo en radianes
+  float alpha = atan2(x, y);
+
+  // Convertir el ángulo de radianes a grados
+  alpha = alpha * 180.0 / PI;
+
+  // Asegúrate de que el ángulo esté en el rango de 0 a 360 grados
+  if (alpha < 0) {
+    alpha += 360.0;
+  }
+  
+
+  
+  return alpha;
+
+}
+
+void ComeBack1(){
+  Serial.print("Q: "); //empezando el programa vale un valor muy grande como 999999999
+  Serial.println(Q);
+  if( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) <= 5){
+    Serial.println("Llegaste al destino");
+    Motor_Stop();
+    LoraSend("LLegaste al destino");
+  }
+  
+  if( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) <= Q ){
+    Serial.println("Apuntando");
+    Motor_Stop();
+    alpha = Aim();
+    while( fabs( Get_heading() - alpha) > 5 ){
+      Serial.print("Teta: "); Serial.println(Get_heading());
+      Serial.print("Alpha: ");  Serial.println( alpha );
+      Turn_Right();
+      Serial.println("--> Girando a la derecha -->");
+    }
+    if( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) > 1){
+      Q = gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) / 1.75 ;
+    }
+  }else{
+    Serial.println("Movindome");
+    Move_Front();
   }
 }
 
