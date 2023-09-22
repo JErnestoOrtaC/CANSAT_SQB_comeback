@@ -13,8 +13,8 @@
 #include <Adafruit_HMC5883_U.h>
 #include <math.h>
 
-const double home_lat =22.2558886;
-const double home_long = -97.8582055;
+const double home_lat =22.2592884;
+const double home_long = -97.8637557;
 const double tolerancia_latitud = 0.0002; // Rango de tolerancia de 1 metro en latitud
 #define EARTH_RADIUS 6371.0
 

@@ -193,30 +193,31 @@ float Aim(){
 }
 
 void ComeBack1(){
-  Serial.print("Q: "); //empezando el programa vale un valor muy grande como 999999999
-  Serial.println(Q);
-  if( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) <= 5){
+
+  if( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) <= 3){
     Serial.println("Llegaste al destino");
     Motor_Stop();
     LoraSend("LLegaste al destino");
-  }
-  
-  if( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) <= Q ){
-    Serial.println("Apuntando");
-    Motor_Stop();
-    alpha = Aim();
-    while( fabs( Get_heading() - alpha) > 5 ){
-      Serial.print("Teta: "); Serial.println(Get_heading());
-      Serial.print("Alpha: ");  Serial.println( alpha );
-      Turn_Right();
-      Serial.println("--> Girando a la derecha -->");
-    }
-    if( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) > 1){
-      Q = gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) / 1.75 ;
-    }
   }else{
-    Serial.println("Movindome");
-    Move_Front();
+    if( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) <= Q ){
+      Serial.println("Apuntando");
+      Motor_Stop();
+      alpha = Aim();
+      while( fabs( Get_heading() - alpha) > 5 ){
+        Serial.print("Teta: "); Serial.println(Get_heading());
+        Serial.print("Alpha: ");  Serial.println( alpha );
+        Turn_Right();
+        Serial.println("--> Girando a la derecha -->");
+      }
+      if( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) > 1){
+        Q = gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) / 1.75 ;
+      }
+    }else{
+      Serial.println("Movindome");
+      Move_Front();
+    }
+  
+  
   }
 }
 
