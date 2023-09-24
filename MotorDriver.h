@@ -4,6 +4,7 @@
 Servo servoIzq;  // Servo para la rueda izquierda
 Servo servoDer;  // Servo para la rueda derecha
 
+int servoSpeed = 100;  // Velocidad deseada en grados por segundo
 
 void Motor_Stop() {
   int stopPosition = 90;  // Puedes ajustar esto según la posición de "detención" del servo (90 grados es el centro)
@@ -12,27 +13,68 @@ void Motor_Stop() {
 }
 
 void Turn_Left() {
-  Motor_Stop();
-  servoDer.write(0);  // Gira el servo derecho en sentido horario
+  int servoSpeed = 20;  // Velocidad deseada en grados por segundo
+
+  unsigned long currentTime = millis();
+  static unsigned long lastMoveTime = 0;
+  
+  // Calcula el tiempo transcurrido desde la última llamada
+  unsigned long deltaTime = currentTime - lastMoveTime;
+  
+  // Calcula la cantidad de grados a mover en función de la velocidad
+  float degreesToMove = (servoSpeed / 1000.0) * deltaTime;
+  
+  // Actualiza la posición del servo izquierdo
+  int cwPositionIzq = 0;  // Gira el servo izquierdo en sentido horario
+  servoIzq.write(cwPositionIzq);
+  
+  // Actualiza el tiempo de la última llamada
+  lastMoveTime = currentTime;
 }
 
 void Turn_Right() {
-  int cwPositionIzq = 0;  // Cambia esto según la posición en la que la rueda izquierda gire en sentido horario
-  servoIzq.write(cwPositionIzq);
-  int ccwPositionDer = 90;  // Cambia esto según la posición en la que la rueda derecha gire en sentido antihorario
+  int servoSpeed = 20;
+
+  unsigned long currentTime = millis();
+  static unsigned long lastMoveTime = 0;
+  
+  // Calcula el tiempo transcurrido desde la última llamada
+  unsigned long deltaTime = currentTime - lastMoveTime;
+  
+  // Calcula la cantidad de grados a mover en función de la velocidad
+  float degreesToMove = (servoSpeed / 1000.0) * deltaTime;
+  
+  // Actualiza la posición del servo derecho
+  int ccwPositionDer = 0;  // Gira el servo derecho en sentido horario
   servoDer.write(ccwPositionDer);
+  
+  // Actualiza el tiempo de la última llamada
+  lastMoveTime = currentTime;
 }
 
 void Move_Front() {
-  int cwPositionIzq = 0;  // Cambia esto según la posición en la que la rueda izquierda gire en sentido horario
-  int cwPositionDer = 0;  // Cambia esto según la posición en la que la rueda derecha gire en sentido horario
+  int servoSpeed = 100;  // Velocidad deseada en grados por segundo
+  unsigned long currentTime = millis();
+  static unsigned long lastMoveTime = 0;
+  
+  // Calcula el tiempo transcurrido desde la última llamada
+  unsigned long deltaTime = currentTime - lastMoveTime;
+  
+  // Calcula la cantidad de grados a mover en función de la velocidad
+  float degreesToMove = (servoSpeed / 1000.0) * deltaTime;
+  
+  // Actualiza la posición de los servos
+  int cwPositionIzq = 0;  // Gira el servo izquierdo en sentido horario
+  int cwPositionDer = 0;  // Gira el servo derecho en sentido horario
   servoIzq.write(cwPositionIzq);
   servoDer.write(cwPositionDer);
+  
+  // Actualiza el tiempo de la última llamada
+  lastMoveTime = currentTime;
 }
 
 void Move_Back() {
-  Motor_Stop();
-  servoIzq.write(0);    // Gira el servo izquierdo en sentido antihorario
+  servoIzq.write(180);    // Gira el servo izquierdo en sentido antihorario
   servoDer.write(180);  // Gira el servo derecho en sentido antihorario
 }
 

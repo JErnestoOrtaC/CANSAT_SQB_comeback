@@ -188,21 +188,33 @@ void ComeBack1(){
     Serial.println("Apuntando");
     Motor_Stop();
     alpha = Aim();
-    while( fabs( Get_heading() - alpha) > 5 ){
-      Serial.print("Teta: "); Serial.println(Get_heading());
-      Serial.print("Alpha: ");  Serial.println( alpha );
-      servoDer.write(90);
-      servoIzq.write(90);
-      if( Get_heading() < alpha ){
-        //gira a la derecha
+    while (fabs(Get_heading() - alpha) > 5) {
+      Serial.print("Teta: "); 
+      Serial.println(Get_heading());
+      Serial.print("Alpha: ");  
+      Serial.println(alpha);
+
+      float angleDifference = Get_heading() - alpha;
+
+      // Ajusta la diferencia angular para que esté en el rango [-180, 180]
+      if (angleDifference > 180) {
+        angleDifference -= 360;
+      } else if (angleDifference < -180) {
+        angleDifference += 360;
+      }
+
+      if (angleDifference > 0) {
+        // Gira a la derecha
         Turn_Right();
-        Serial.println("--> Girando a la derecha -->");
-      }
-      if( Get_heading() > alpha ){
+        Serial.println("<<<<<---------- Girando a la izq -<<<-----");
+      } else {
+        // Gira a la izquierda
         Turn_Left();
-        Serial.println("<<<-----GIRANDO IZQ-----------");
+        Serial.println("----->>> Girando a la DERECHA -->>>>>>>>");
       }
+      delay(200);
     }
+
     if( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) > 1){
       Q = gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) / 1.75 ;
     }

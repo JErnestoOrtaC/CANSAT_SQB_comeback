@@ -34,7 +34,6 @@ void loop() {
   Serial.print("teta: ");  Serial.println(Get_heading());
   Serial.print("Alpha: ");  Serial.println( alpha );
 
-  
   ComeBack1();
   
   delay(500);
