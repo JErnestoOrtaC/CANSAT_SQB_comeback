@@ -1,56 +1,49 @@
 
-/*
-Este header file contiene funciones referentes al uso del motorDriver
-A es izq y B es der
-*/
-#define AF 14
-#define AB 27
-#define BF 26
-#define BB 25
+#include <ESP32Servo.h>
 
-void PinMode(){
-  pinMode(14, OUTPUT);
-  pinMode(27, OUTPUT);
-  pinMode(26, OUTPUT);
-  pinMode(25, OUTPUT);
+Servo servoIzq;  // Servo para la rueda izquierda
+Servo servoDer;  // Servo para la rueda derecha
+
+
+void Motor_Stop() {
+  int stopPosition = 90;  // Puedes ajustar esto según la posición de "detención" del servo (90 grados es el centro)
+  servoIzq.write(stopPosition);
+  servoDer.write(stopPosition);
 }
 
-void Motor_Stop(){
-  digitalWrite(AF, LOW);
-  digitalWrite(AB, LOW);
-  digitalWrite(BF, LOW);
-  digitalWrite(BB, LOW);
+void Turn_Left() {
+  Motor_Stop();
+  servoDer.write(0);  // Gira el servo derecho en sentido horario
 }
 
-void Move_Front(){
-  digitalWrite(AF, HIGH);
-  digitalWrite(AB, LOW);
-  digitalWrite(BF, HIGH);
-  digitalWrite(BB, LOW);
+void Turn_Right() {
+  int cwPositionIzq = 0;  // Cambia esto según la posición en la que la rueda izquierda gire en sentido horario
+  servoIzq.write(cwPositionIzq);
+  int ccwPositionDer = 90;  // Cambia esto según la posición en la que la rueda derecha gire en sentido antihorario
+  servoDer.write(ccwPositionDer);
 }
 
-void Move_Back(){
-  digitalWrite(AF, LOW);
-  digitalWrite(AB, HIGH);
-  digitalWrite(BF, LOW);
-  digitalWrite(BB, HIGH);
+void Move_Front() {
+  int cwPositionIzq = 0;  // Cambia esto según la posición en la que la rueda izquierda gire en sentido horario
+  int cwPositionDer = 0;  // Cambia esto según la posición en la que la rueda derecha gire en sentido horario
+  servoIzq.write(cwPositionIzq);
+  servoDer.write(cwPositionDer);
 }
 
-void Turn_Right(){
-  
-  digitalWrite(AF, HIGH);
-  digitalWrite(AB, LOW);
-  digitalWrite(BF, LOW);
-  digitalWrite(BB, LOW);
+void Move_Back() {
+  Motor_Stop();
+  servoIzq.write(0);    // Gira el servo izquierdo en sentido antihorario
+  servoDer.write(180);  // Gira el servo derecho en sentido antihorario
 }
 
-void Turn_Left(){
-  
-  digitalWrite(AF, LOW);
-  digitalWrite(AB, LOW);
-  digitalWrite(BF, HIGH);
-  digitalWrite(BB, LOW);
-}
+
+
+
+
+
+
+
+
 
 
 

@@ -14,7 +14,8 @@ float alpha;
 
 void Begins(){
 
-  PinMode();
+  servoIzq.attach(14);  // Adjunta el servo izquierdo al pin 14
+  servoDer.attach(12);
   Motor_Stop();
 
 
@@ -22,7 +23,6 @@ void Begins(){
   Serial.begin(9600);
   Serial1.begin(9600, SERIAL_8N1, 32, 4);
   Wire.begin();
-  Adafruit_HMC5883_Unified mag = Adafruit_HMC5883_Unified(12345);
   sensor_t sensor;
   delay(150);
   LoraConfig();
@@ -138,21 +138,6 @@ void Landing(){
   }
 }
 
-bool Arrived(){
-  if( fabs(home_lat - datos.gpsData.latitude) <= tolerancia_latitud ){
-    if( fabs(home_lat - datos.gpsData.latitude) <= tolerancia_latitud ){
-      return true;
-    }
-    else{
-      return false;
-    }
-  }
-  else{
-    return false;
-  }
-  
-}
-
 float Aim(){
   double y = gps.distanceBetween(gps.location.lat(), home_long, home_lat, home_long);
   double x = gps.distanceBetween(home_lat, gps.location.lng(), home_lat, home_long);
@@ -193,31 +178,37 @@ float Aim(){
 }
 
 void ComeBack1(){
-
-  if( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) <= 3){
+  if( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) <= 5){
     Serial.println("Llegaste al destino");
     Motor_Stop();
     LoraSend("LLegaste al destino");
-  }else{
-    if( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) <= Q ){
-      Serial.println("Apuntando");
-      Motor_Stop();
-      alpha = Aim();
-      while( fabs( Get_heading() - alpha) > 5 ){
-        Serial.print("Teta: "); Serial.println(Get_heading());
-        Serial.print("Alpha: ");  Serial.println( alpha );
+  }
+  
+  if( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) <= Q ){
+    Serial.println("Apuntando");
+    Motor_Stop();
+    alpha = Aim();
+    while( fabs( Get_heading() - alpha) > 5 ){
+      Serial.print("Teta: "); Serial.println(Get_heading());
+      Serial.print("Alpha: ");  Serial.println( alpha );
+      servoDer.write(90);
+      servoIzq.write(90);
+      if( Get_heading() < alpha ){
+        //gira a la derecha
         Turn_Right();
         Serial.println("--> Girando a la derecha -->");
       }
-      if( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) > 1){
-        Q = gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) / 1.75 ;
+      if( Get_heading() > alpha ){
+        Turn_Left();
+        Serial.println("<<<-----GIRANDO IZQ-----------");
       }
-    }else{
-      Serial.println("Movindome");
-      Move_Front();
     }
-  
-  
+    if( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) > 1){
+      Q = gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) / 1.75 ;
+    }
+  }else{
+    Serial.println("Movindome");
+    Move_Front();
   }
 }
 
