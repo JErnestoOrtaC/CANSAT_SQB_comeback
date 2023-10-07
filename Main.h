@@ -13,17 +13,19 @@ float alpha;
 
 
 void Begins(){
-
-  servoIzq.attach(14);  // Adjunta el servo izquierdo al pin 14
-  servoDer.attach(12);
+  pinMode(motorAPin1, OUTPUT);
+  pinMode(motorAPin2, OUTPUT);
+  pinMode(motorBPin1, OUTPUT);
+  pinMode(motorBPin2, OUTPUT);
   Motor_Stop();
 
-
-  Serial2.begin(115200, SERIAL_8N1, 16, 17);
   Serial.begin(9600);
-  Serial1.begin(9600, SERIAL_8N1, 32, 4);
+  Serial1.begin(9600, SERIAL_8N1, 4, 32);
+  Serial2.begin(115200, SERIAL_8N1, 16, 17);
+
   Wire.begin();
   sensor_t sensor;
+
   delay(150);
   LoraConfig();
 }
@@ -33,101 +35,6 @@ void EnviarInfo(){
   LoraSend(mensaje);
 }
 
-void ComeBackMc(){
- 
-  //Avanza al norte para igualar la latitud  
-  if (fabs(home_lat - datos.gpsData.latitude) > tolerancia_latitud) { //CHECAMOS QUE NO ESTEMOS YA EN LA MISMA LATITUD DENTRO DEL MARGEN DE ERROR
-    //Apunta al norte
-    while( !Head_North( Get_heading() ) ){ //CHECAMOS SI ESTAMOS APUNTANDO AL NORTE
-      Serial.print("Hedaing: "); Serial.println( Get_heading() );
-
-      if( Get_heading() < 180){
-      Serial.println("Gira a la IZQUIERDA");
-      LoraSend(",Msj: Girando");
-      Turn_Left();
-      }
-
-      else{
-      Serial.println("Gira a la DERECHA");
-      LoraSend("Girando a la DERECHA para apuntar al norte");
-
-      Turn_Right();
-      }
-    }
-    Motor_Stop();
-
-    //YA ESTAMOS APUNTANDO AL NORTE
-    Serial.println("\nApuntando al norte");
-    LoraSend("Apuntando al norte");
-
-    if (home_lat < datos.gpsData.latitude) {
-      // El carro se encuentra al sur de "home"
-      Serial.println("Camina atras");
-      LoraSend("Avanzando al sur");
-
-      //MOVEMOS LOS 2 MOTORES HACIA ATRAS
-      Move_Back();
-    }
-    else {
-      // El carro se encuentra al norte de "home"
-      Serial.println("Camina enfrente");
-      LoraSend("Avanzando al norte");
-
-      //MOVEMOS LOS 2 MOTORES HACIA ENFRENTE
-      Move_Front();
-    }
-
-  }
-  else{// YA ESTAMOS EN LA MISMA LATITUD
-    Motor_Stop();
-
-    //Igualaste la latitud
-    Serial.println("Misma latitud");
-    LoraSend("Misma latitud");
-
-    if (fabs(home_lat - datos.gpsData.latitude) > tolerancia_latitud) { //CHECAMOS QUE NO ESTEMOS DENTRO DE LA MISMA LONGITUD
-        //Apunta al este
-      while( !Head_East( Get_heading() ) ){ 
-        Serial.print("Hedaing: "); Serial.println( Get_heading() );
-        if( Get_heading() > 90 && Get_heading() < 270  ){//GIRAMOS A LA IZQUIERDA UN MOTOR DESPACIO Y FRENAMOS EL OTRO
-        Serial.println("Gira a la IZQUIERDA");
-        LoraSend("Girando a la IZQUIERDA para apuntar al norte");
-
-        Turn_Left();
-        }
-        else{//GIRAMOS A LA DERECHA UN MOTOR DESPACIO Y FRENAMOS EL OTRO
-        Serial.println("Gira a la DERECHA");
-        LoraSend("Girando a la DERECHA para apuntar al norte");
-
-        Turn_Right();
-        }
-      }
-      Motor_Stop();
-      
-      if (home_long < datos.gpsData.longitude) {
-        // El carro se encuentra al oeste de "home"
-        Serial.println("Camina atars");
-        LoraSend("Avanzando al oeste");
-
-        Move_Back();
-
-      } else {
-        // El carro se encuentra al este de "home"
-        Serial.println("Camina deferente");
-        LoraSend("Avanzando al este");
-
-        Move_Front();
-      }
-    }
-    else{
-      Motor_Stop();
-      while(1){
-        Serial.println("\n!!!!!!!!!LLEGASTE!!!!!!!!!!!!!!!!");
-        Motor_Stop();
-      }
-    }
-  }
-}
 
 void Landing(){
   //Abre el paracaidas
@@ -183,44 +90,46 @@ void ComeBack1(){
     Motor_Stop();
     LoraSend("LLegaste al destino");
   }
-  
-  if( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) <= Q ){
-    Serial.println("Apuntando");
-    Motor_Stop();
-    alpha = Aim();
-    while (fabs(Get_heading() - alpha) > 5) {
-      Serial.print("Teta: "); 
-      Serial.println(Get_heading());
-      Serial.print("Alpha: ");  
-      Serial.println(alpha);
+  else{
+    if( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) <= Q ){
+      Serial.println("Apuntando");
+      Motor_Stop();
+      alpha = Aim();
+      while (fabs(Get_heading() - alpha) > 5) {
+        Serial.print("Teta: "); 
+        Serial.println(Get_heading());
+        Serial.print("Alpha: ");  
+        Serial.println(alpha);
 
-      float angleDifference = Get_heading() - alpha;
+        float angleDifference = Get_heading() - alpha;
 
-      // Ajusta la diferencia angular para que esté en el rango [-180, 180]
-      if (angleDifference > 180) {
-        angleDifference -= 360;
-      } else if (angleDifference < -180) {
-        angleDifference += 360;
+        // Ajusta la diferencia angular para que esté en el rango [-180, 180]
+        if (angleDifference > 180) {
+          angleDifference -= 360;
+        } else if (angleDifference < -180) {
+          angleDifference += 360;
+        }
+
+        if (angleDifference > 0) {
+          // Gira a la derecha
+          Turn_Right();
+          Serial.println("<<<<<---------- Girando a la izq -<<<-----");
+        } else {
+          // Gira a la izquierda
+          Turn_Left();
+          Serial.println("----->>> Girando a la DERECHA -->>>>>>>>");
+        }
+        delay(200);
       }
 
-      if (angleDifference > 0) {
-        // Gira a la derecha
-        Turn_Right();
-        Serial.println("<<<<<---------- Girando a la izq -<<<-----");
-      } else {
-        // Gira a la izquierda
-        Turn_Left();
-        Serial.println("----->>> Girando a la DERECHA -->>>>>>>>");
+      if( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) > 1){
+        Q = gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) / 1.75 ;
       }
-      delay(200);
     }
-
-    if( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) > 1){
-      Q = gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) / 1.75 ;
-    }
-  }else{
+    else{
     Serial.println("Movindome");
     Move_Front();
+    }
   }
 }
 

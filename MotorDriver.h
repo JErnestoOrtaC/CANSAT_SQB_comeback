@@ -1,91 +1,46 @@
+// Definición de los pines para MotorA
+const int motorAPin1 = 13;
+const int motorAPin2 = 12;
 
-#include <ESP32Servo.h>
-
-Servo servoIzq;  // Servo para la rueda izquierda
-Servo servoDer;  // Servo para la rueda derecha
-
-int servoSpeed = 100;  // Velocidad deseada en grados por segundo
-
-void Motor_Stop() {
-  int stopPosition = 90;  // Puedes ajustar esto según la posición de "detención" del servo (90 grados es el centro)
-  servoIzq.write(stopPosition);
-  servoDer.write(stopPosition);
-}
-
+// Definición de los pines para MotorB
+const int motorBPin1 = 14;
+const int motorBPin2 = 27;
 void Turn_Left() {
-  int servoSpeed = 20;  // Velocidad deseada en grados por segundo
-
-  unsigned long currentTime = millis();
-  static unsigned long lastMoveTime = 0;
-  
-  // Calcula el tiempo transcurrido desde la última llamada
-  unsigned long deltaTime = currentTime - lastMoveTime;
-  
-  // Calcula la cantidad de grados a mover en función de la velocidad
-  float degreesToMove = (servoSpeed / 1000.0) * deltaTime;
-  
-  // Actualiza la posición del servo izquierdo
-  int cwPositionIzq = 0;  // Gira el servo izquierdo en sentido horario
-  servoIzq.write(cwPositionIzq);
-  
-  // Actualiza el tiempo de la última llamada
-  lastMoveTime = currentTime;
+  // Girar a la izquierda (MotorA hacia adelante, MotorB hacia atrás)
+  digitalWrite(motorAPin1, HIGH);
+  digitalWrite(motorAPin2, LOW);
+  digitalWrite(motorBPin1, LOW);
+  digitalWrite(motorBPin2, HIGH);
 }
 
 void Turn_Right() {
-  int servoSpeed = 20;
-
-  unsigned long currentTime = millis();
-  static unsigned long lastMoveTime = 0;
-  
-  // Calcula el tiempo transcurrido desde la última llamada
-  unsigned long deltaTime = currentTime - lastMoveTime;
-  
-  // Calcula la cantidad de grados a mover en función de la velocidad
-  float degreesToMove = (servoSpeed / 1000.0) * deltaTime;
-  
-  // Actualiza la posición del servo derecho
-  int ccwPositionDer = 0;  // Gira el servo derecho en sentido horario
-  servoDer.write(ccwPositionDer);
-  
-  // Actualiza el tiempo de la última llamada
-  lastMoveTime = currentTime;
+  // Girar a la derecha (MotorA hacia atrás, MotorB hacia adelante)
+  digitalWrite(motorAPin1, LOW);
+  digitalWrite(motorAPin2, HIGH);
+  digitalWrite(motorBPin1, HIGH);
+  digitalWrite(motorBPin2, LOW);
 }
 
 void Move_Front() {
-  int servoSpeed = 100;  // Velocidad deseada en grados por segundo
-  unsigned long currentTime = millis();
-  static unsigned long lastMoveTime = 0;
-  
-  // Calcula el tiempo transcurrido desde la última llamada
-  unsigned long deltaTime = currentTime - lastMoveTime;
-  
-  // Calcula la cantidad de grados a mover en función de la velocidad
-  float degreesToMove = (servoSpeed / 1000.0) * deltaTime;
-  
-  // Actualiza la posición de los servos
-  int cwPositionIzq = 0;  // Gira el servo izquierdo en sentido horario
-  int cwPositionDer = 0;  // Gira el servo derecho en sentido horario
-  servoIzq.write(cwPositionIzq);
-  servoDer.write(cwPositionDer);
-  
-  // Actualiza el tiempo de la última llamada
-  lastMoveTime = currentTime;
+  // Avanzar (ambos motores hacia adelante)
+  digitalWrite(motorAPin1, HIGH);
+  digitalWrite(motorAPin2, LOW);
+  digitalWrite(motorBPin1, HIGH);
+  digitalWrite(motorBPin2, LOW);
 }
 
 void Move_Back() {
-  servoIzq.write(180);    // Gira el servo izquierdo en sentido antihorario
-  servoDer.write(180);  // Gira el servo derecho en sentido antihorario
+  // Retroceder (ambos motores hacia atrás)
+  digitalWrite(motorAPin1, LOW);
+  digitalWrite(motorAPin2, HIGH);
+  digitalWrite(motorBPin1, LOW);
+  digitalWrite(motorBPin2, HIGH);
 }
 
-
-
-
-
-
-
-
-
-
-
-
+void Motor_Stop() {
+  // Detener ambos motores
+  digitalWrite(motorAPin1, LOW);
+  digitalWrite(motorAPin2, LOW);
+  digitalWrite(motorBPin1, LOW);
+  digitalWrite(motorBPin2, LOW);
+}
