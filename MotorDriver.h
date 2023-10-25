@@ -5,6 +5,14 @@ const int motorAPin2 = 12;
 // Definición de los pines para MotorB
 const int motorBPin1 = 14;
 const int motorBPin2 = 27;
+
+void motorPinSetup(){
+  pinMode(motorAPin1, OUTPUT);
+  pinMode(motorAPin2, OUTPUT);
+  pinMode(motorBPin1, OUTPUT);
+  pinMode(motorBPin2, OUTPUT);
+}
+
 void Turn_Left() {
   // Girar a la izquierda (MotorA hacia adelante, MotorB hacia atrás)
   digitalWrite(motorAPin1, HIGH);

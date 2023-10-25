@@ -7,8 +7,9 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
+#include <Adafruit_BME280.h>
 #include <Adafruit_BMP085.h>
-#include <MPU6050.h>
+#include <Adafruit_MPU6050.h>
 #include <TinyGPS++.h>
 #include <Adafruit_HMC5883_U.h>
 #include <math.h>
@@ -29,6 +30,8 @@ struct Telemetria {
   float temperatura;
   float presion;
   float altura;
+  float humedad;
+  float tin;
   float ax;
   float ay;
   float az;
@@ -42,8 +45,9 @@ struct Telemetria {
 
 String mensaje;
 
+Adafruit_MPU6050 mpu;
+Adafruit_BME280 bme;
 Adafruit_BMP085 bmp;
-MPU6050 mpu;
 TinyGPSPlus gps;
 Adafruit_HMC5883_Unified mag = Adafruit_HMC5883_Unified(12345);
 
@@ -54,25 +58,87 @@ GPSData data;
 
 
 float Get_Pz(){
-  long double x=0;
-  for(int i=0; i<31;i++){
-    x += bmp.readPressure();
-  }
-    return (x/30);
+  delay(150);
+    return ( bmp.readPressure());
 }
 
 void Sensorcheck(){
-  if (!bmp.begin()) {
-    Serial.println("No se pudo encontrar el sensor BMP180. Verifica las conexiones.");
-    while (1);
+  unsigned status;
+  status = bme.begin(0X76);
+  if( !status ){
+    Serial.println("Error sensor bme280");
+    Serial.print("ID: 0x");
+    Serial.println( bme.sensorID(), 16 );
   }
 
   // Inicializar el sensor MPU6050
-  mpu.initialize();
-  if (!mpu.testConnection()) {
-    Serial.println("No se pudo encontrar el sensor MPU6050. Verifica las conexiones.");
-    while (1);
+  // Try to initialize!
+  if (!mpu.begin()) {
+    Serial.println("Failed to find MPU6050 chip");
+    while (1) {
+      delay(10);
+    }
   }
+  Serial.println("MPU6050 Found!");
+
+  mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
+  Serial.print("Accelerometer range set to: ");
+  switch (mpu.getAccelerometerRange()) {
+    case MPU6050_RANGE_2_G:
+      Serial.println("+-2G");
+      break;
+    case MPU6050_RANGE_4_G:
+      Serial.println("+-4G");
+      break;
+    case MPU6050_RANGE_8_G:
+      Serial.println("+-8G");
+      break;
+    case MPU6050_RANGE_16_G:
+      Serial.println("+-16G");
+      break;
+    }
+  mpu.setGyroRange(MPU6050_RANGE_500_DEG);
+  Serial.print("Gyro range set to: ");
+  switch (mpu.getGyroRange()) {
+    case MPU6050_RANGE_250_DEG:
+      Serial.println("+- 250 deg/s");
+      break;
+    case MPU6050_RANGE_500_DEG:
+      Serial.println("+- 500 deg/s");
+      break;
+    case MPU6050_RANGE_1000_DEG:
+      Serial.println("+- 1000 deg/s");
+      break;
+    case MPU6050_RANGE_2000_DEG:
+      Serial.println("+- 2000 deg/s");
+      break;
+  }
+
+  mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
+  Serial.print("Filter bandwidth set to: ");
+  switch (mpu.getFilterBandwidth()) {
+    case MPU6050_BAND_260_HZ:
+      Serial.println("260 Hz");
+      break;
+    case MPU6050_BAND_184_HZ:
+      Serial.println("184 Hz");
+      break;
+    case MPU6050_BAND_94_HZ:
+      Serial.println("94 Hz");
+      break;
+    case MPU6050_BAND_44_HZ:
+      Serial.println("44 Hz");
+      break;
+    case MPU6050_BAND_21_HZ:
+      Serial.println("21 Hz");
+      break;
+    case MPU6050_BAND_10_HZ:
+      Serial.println("10 Hz");
+      break;
+    case MPU6050_BAND_5_HZ:
+      Serial.println("5 Hz");
+      break;
+    }
 
   if(!mag.begin())
   {
@@ -80,25 +146,41 @@ void Sensorcheck(){
     Serial.println("Ooops, no HMC5883 detected ... Check your wiring!");
     while(1);
   }
+
+  Serial.begin(9600);
+  if (!bmp.begin()) {
+	Serial.println("Could not find a valid BMP085 sensor, check wiring!");
+	while (1) {}
+  }
+
 }
 
 void BMPSensor() {
   datos.temperatura = bmp.readTemperature();
-  datos.presion = bmp.readPressure();
+  datos.presion = bmp.readPressure() ;
+  datos.altura = bmp.readAltitude(datos.Pz);
+}
+
+void BMESensor() {
+  datos.temperatura = bme.readTemperature();
+  datos.presion = bme.readPressure() ;
   datos.altura = bmp.readAltitude(datos.Pz);
 }
 
 void IMU() {
-  int16_t ax, ay, az;
-  int16_t gx, gy, gz;
-  mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
-  datos.ax = az;
-  datos.ay = ax;
-  datos.az = ay;
+  
+  sensors_event_t a, g, temp;
+  mpu.getEvent(&a, &g, &temp);
 
-  datos.gx = gx;
-  datos.gy = gy;
-  datos.gz = gz;
+  datos.ax = a.acceleration.z;
+  datos.ay = a.acceleration.x;
+  datos.az = a.acceleration.y;
+
+  datos.gx = g.gyro.z;
+  datos.gy = g.gyro.x;
+  datos.gz = g.gyro.y;
+
+  datos.tin = temp.temperature;
 }
 
 void getGPSData() {
@@ -141,6 +223,7 @@ float Get_heading(){
     _heading -= 2*PI;
    
   // Convert radians to degrees for readability.
+  datos.heading = _heading * 180/M_PI; 
   return _heading * 180/M_PI; 
 }
 
@@ -153,8 +236,10 @@ void Get_Sensors(){
 }
 
 void SerialDisplay(){
-  Serial.print("Temperatura: ");
+  Serial.print("Temperatura Ext: ");
   Serial.println(datos.temperatura);
+
+  Serial.println("Temperatura Int: " + String(datos.tin) );
 
   Serial.print("PZ:");
   Serial.println(datos.Pz);
@@ -201,25 +286,24 @@ void SerialDisplay(){
 void PacageTelemetry(){
   mensaje = "";
   // Realiza lo mismo para cada variable, por ejemplo:
-  mensaje += "Temperatura: " + String(datos.temperatura);
-  mensaje += "Presión: " + String(datos.presion);
-  mensaje += "Altura: " + String(datos.altura);
-  mensaje += "Ax: " + String(datos.ax);
-  mensaje += "Ay: " + String(datos.ay);
-  mensaje += "Az: " + String(datos.az);
-  mensaje += "Gx: " + String(datos.gx);
-  mensaje += "Gy: " + String(datos.gy);
-  mensaje += "Gz: " + String(datos.gz);
-  mensaje += "Vx: " + String(datos.vx);
-  mensaje += "Vy: " + String(datos.vy);
-  mensaje += "Vz: " + String(datos.vz);
-  mensaje += "Vt: " + String(datos.vt);
-  mensaje += "Hdg:" + String(datos.heading);
-  mensaje += "Dist: " + String( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) );
+  mensaje += "TEMP_EX:" + String(datos.temperatura) + ",";
+  mensaje += "TEMP_INT:" + String(datos.tin) + ",";
+  mensaje += "PRE:" + String(datos.presion);
+  mensaje += "ALT:" + String(datos.altura);
+  mensaje += "HUM:" + String(datos.tin) + ",";
+  mensaje += "HDG:" + String(datos.heading) + ",";
+  mensaje += "Ax:" + String(datos.ax) + ",";
+  mensaje += "Ay:" + String(datos.ay) + ",";
+  mensaje += "Az:" + String(datos.az) + ",";
+  mensaje += "Gx:" + String(datos.gx) + ",";
+  mensaje += "Gy:" + String(datos.gy) + ",";
+  mensaje += "Gz:" + String(datos.gz) + ",";
+  mensaje += "Vx:" + String(datos.vx) + ",";
+  mensaje += "Vy:" + String(datos.vy) + ",";
+  mensaje += "Vz:" + String(datos.vz) + ",";
+  mensaje += "Vt:" + String(datos.vt) + ",";
+  mensaje += "Hdg:" + String(datos.heading) + ",";
+  mensaje += "LAT:" + String(datos.gpsdata.latitude) + ",";
+  mensaje += "LONG:" + String(datos.gps.longitude) + ",";
+  mensaje += "Dist:" + String( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) );
 }
-
-
-
-
-
-

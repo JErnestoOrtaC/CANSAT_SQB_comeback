@@ -13,15 +13,12 @@ float alpha;
 
 
 void Begins(){
-  pinMode(motorAPin1, OUTPUT);
-  pinMode(motorAPin2, OUTPUT);
-  pinMode(motorBPin1, OUTPUT);
-  pinMode(motorBPin2, OUTPUT);
-  Motor_Stop();
 
+  motorPinSetup();
+  Motor_Stop();
   Serial.begin(9600);
   Serial1.begin(9600, SERIAL_8N1, 4, 32);
-  Serial2.begin(115200, SERIAL_8N1, 16, 17);
+  Serial2.begin(115200, SERIAL_8N1, 17, 16);
 
   Wire.begin();
   sensor_t sensor;
@@ -35,15 +32,6 @@ void EnviarInfo(){
   LoraSend(mensaje);
 }
 
-
-void Landing(){
-  //Abre el paracaidas
-  if( bmp.readAltitude(datos.Pz) < 1 ){
-    nrpFlag =0; //Reseteamos la nrpflag para que no abre y corte el paracaidas cuado ya este en el suelo
-    cmbkFlag =1; //Activamos el sistema de comeback
-    //Separa el paracaidas
-  }
-}
 
 float Aim(){
   double y = gps.distanceBetween(gps.location.lat(), home_long, home_lat, home_long);
