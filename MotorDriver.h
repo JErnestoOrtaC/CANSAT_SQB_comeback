@@ -18,12 +18,12 @@ void Turn_Left() {
   digitalWrite(motorAPin1, HIGH);
   digitalWrite(motorAPin2, LOW);
   digitalWrite(motorBPin1, LOW);
-  digitalWrite(motorBPin2, HIGH);
+  digitalWrite(motorBPin2, LOW);
 }
 
 void Turn_Right() {
   // Girar a la derecha (MotorA hacia atrás, MotorB hacia adelante)
-  digitalWrite(motorAPin1, LOW);
+  digitalWrite(motorAPin1, HIGH);
   digitalWrite(motorAPin2, HIGH);
   digitalWrite(motorBPin1, HIGH);
   digitalWrite(motorBPin2, LOW);

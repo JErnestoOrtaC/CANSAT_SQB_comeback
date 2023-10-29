@@ -30,7 +30,8 @@ void loop() {
   Get_Sensors();
   PacageTelemetry();
   SerialDisplay();
-  LoraSend(mensaje);  
+  LoraSend(mensaje);
+  ComeBack1();
   delay(500);
 
 }

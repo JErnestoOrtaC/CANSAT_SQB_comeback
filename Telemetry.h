@@ -38,7 +38,6 @@ struct Telemetria {
   float gx;
   float gy;
   float gz;
-  float vx, vy, vz, vt;
   float heading;
   GPSData gpsData;  // Agrega el miembro de tipo GPSData
 };
@@ -47,7 +46,6 @@ String mensaje;
 
 Adafruit_MPU6050 mpu;
 Adafruit_BME280 bme;
-Adafruit_BMP085 bmp;
 TinyGPSPlus gps;
 Adafruit_HMC5883_Unified mag = Adafruit_HMC5883_Unified(12345);
 
@@ -59,7 +57,7 @@ GPSData data;
 
 float Get_Pz(){
   delay(150);
-    return ( bmp.readPressure());
+    return ( bme.readPressure() / 100);
 }
 
 void Sensorcheck(){
@@ -147,24 +145,12 @@ void Sensorcheck(){
     while(1);
   }
 
-  Serial.begin(9600);
-  if (!bmp.begin()) {
-	Serial.println("Could not find a valid BMP085 sensor, check wiring!");
-	while (1) {}
-  }
-
-}
-
-void BMPSensor() {
-  datos.temperatura = bmp.readTemperature();
-  datos.presion = bmp.readPressure() ;
-  datos.altura = bmp.readAltitude(datos.Pz);
 }
 
 void BMESensor() {
   datos.temperatura = bme.readTemperature();
-  datos.presion = bme.readPressure() ;
-  datos.altura = bmp.readAltitude(datos.Pz);
+  datos.presion = bme.readPressure() / 100 ;
+  datos.altura = bme.readAltitude(datos.Pz);
 }
 
 void IMU() {
@@ -193,25 +179,17 @@ void getGPSData() {
     datos.gpsData.longitude = gps.location.lng();
 }
 
-void Get_vt() {
-  // Integración de la aceleración lineal para obtener la velocidad
-  datos.vx += (datos.ax - datos.gx) *3;
-  datos.vy += (datos.ay - datos.gy)*3;
-  datos.vz += (datos.az - datos.gz)*3;
 
-  datos.vt = sqrt(datos.vx * datos.vx + datos.vy * datos.vy + datos.vz * datos.vz);
-
-}
 
 float Get_heading(){
   sensors_event_t event; 
   mag.getEvent(&event);
-  float _heading = atan2(event.magnetic.y, event.magnetic.x);
+  float _heading = atan2(event.magnetic.x, event.magnetic.y);
     // Once you have your heading, you must then add your 'Declination Angle', which is the 'Error' of the magnetic field in your location.
   // Find yours here: http://www.magnetic-declination.com/  
   // Mine is: -13* 2' W, which is ~13 Degrees, or (which we need) 0.22 radians
   // If you cannot find your Declination, comment out these two lines, your compass will be slightly off.
-  float declinationAngle = .22;
+  float declinationAngle = -.215;
   _heading += declinationAngle;
 
   // Correct for when signs are reversed.
@@ -229,9 +207,8 @@ float Get_heading(){
 
 void Get_Sensors(){
   getGPSData();
-  BMPSensor();
+  BMESensor();
   IMU();
-  Get_vt();
   datos.heading = Get_heading();
 }
 
@@ -264,15 +241,6 @@ void SerialDisplay(){
   Serial.print(", ");
   Serial.println(datos.gz);
 
-  Serial.print("Velocidad (x, y, z, total): ");
-  Serial.print(datos.vx);
-  Serial.print(", ");
-  Serial.print(datos.vy);
-  Serial.print(", ");
-  Serial.print(datos.vz);
-  Serial.print(", ");
-  Serial.println(datos.vt);
-
   Serial.print("Datos GPS: ");
   Serial.print("Latitud: ");
   Serial.print(datos.gpsData.latitude,6 );
@@ -298,12 +266,8 @@ void PacageTelemetry(){
   mensaje += "Gx:" + String(datos.gx) + ",";
   mensaje += "Gy:" + String(datos.gy) + ",";
   mensaje += "Gz:" + String(datos.gz) + ",";
-  mensaje += "Vx:" + String(datos.vx) + ",";
-  mensaje += "Vy:" + String(datos.vy) + ",";
-  mensaje += "Vz:" + String(datos.vz) + ",";
-  mensaje += "Vt:" + String(datos.vt) + ",";
   mensaje += "Hdg:" + String(datos.heading) + ",";
-  mensaje += "LAT:" + String(datos.gpsdata.latitude) + ",";
-  mensaje += "LONG:" + String(datos.gps.longitude) + ",";
+  mensaje += "LAT:" + String(datos.gpsData.latitude) + ",";
+  mensaje += "LONG:" + String(datos.gpsData.longitude) + ",";
   mensaje += "Dist:" + String( gps.distanceBetween(gps.location.lat(), gps.location.lng(), home_lat, home_long) );
 }

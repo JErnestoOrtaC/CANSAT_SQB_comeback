@@ -102,10 +102,12 @@ void ComeBack1(){
           // Gira a la derecha
           Turn_Right();
           Serial.println("<<<<<---------- Girando a la izq -<<<-----");
+          LoraSend("<<<<<---------- Girando a la izq -<<<-----");
         } else {
           // Gira a la izquierda
           Turn_Left();
           Serial.println("----->>> Girando a la DERECHA -->>>>>>>>");
+          LoraSend("----->>> Girando a la DERECHA -->>>>>>>>");
         }
         delay(200);
       }
